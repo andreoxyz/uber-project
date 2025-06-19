@@ -134,3 +134,88 @@ Authenticate a user and receive an access token.
 - A new JWT token is generated and returned upon successful login
 - For security reasons, the same error message is returned for both invalid email and invalid password
 
+## Authentication
+
+All protected endpoints require a JWT token to be included in the request headers:
+```
+Authorization: Bearer <token>
+```
+
+## Protected Endpoints
+
+### GET /api/user/profile
+
+Get the authenticated user's profile information. This endpoint requires authentication.
+
+#### Request
+No request body needed. Requires authentication token in headers.
+
+#### Response
+
+##### Success Response (200 OK)
+```json
+{
+  "user": {
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "Socketid": null
+  }
+}
+```
+
+##### Error Responses
+
+###### Unauthorized (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access."
+}
+```
+
+###### Token Blacklisted (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access."
+}
+```
+
+### POST /api/user/logout
+
+Logout the currently authenticated user by blacklisting their token. This endpoint requires authentication.
+
+#### Request
+No request body needed. Requires authentication token in headers.
+
+#### Response
+
+##### Success Response (200 OK)
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+##### Error Responses
+
+###### Missing Token (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access."
+}
+```
+
+###### Invalid Token (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access."
+}
+```
+
+#### Notes
+- The JWT token has an expiration time of 24 hours
+- Once logged out, the token is added to a blacklist and cannot be reused
+- Blacklisted tokens are automatically removed after 24 hours using MongoDB TTL index
+
