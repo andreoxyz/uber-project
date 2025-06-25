@@ -219,3 +219,95 @@ No request body needed. Requires authentication token in headers.
 - Once logged out, the token is added to a blacklist and cannot be reused
 - Blacklisted tokens are automatically removed after 24 hours using MongoDB TTL index
 
+## Captain Endpoints
+
+### POST /api/captains/register
+
+Register a new captain (driver) in the system.
+
+#### Request Body
+
+```json
+{
+  "fullname": {
+    "firstname": "string",  // minimum 2 characters
+    "lastname": "string"    // minimum 2 characters
+  },
+  "email": "string",        // valid email address, will be converted to lowercase
+  "password": "string",     // minimum 6 characters
+  "vehicle": {
+    "color": "string",      // minimum 2 characters
+    "plate": "string",      // minimum 3 characters, must be unique
+    "capacity": "number",   // minimum value of 1
+    "vehicleType": "string" // must be one of: 'car', 'bike', 'auto'
+  }
+}
+```
+
+#### Validation Rules
+- First name must be at least 2 characters long
+- Email must be a valid email address
+- Password must be at least 6 characters long
+- Vehicle color is required
+- Vehicle plate number must be at least 3 characters and must be unique
+- Vehicle capacity must be at least 1
+- Vehicle type must be one of: 'car', 'bike', 'auto'
+
+#### Response
+
+##### Success Response (201 Created)
+```json
+{
+  "captain": {
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "status": "inactive",
+    "socketId": null,
+    "vehicle": {
+      "color": "string",
+      "plate": "string",
+      "capacity": number,
+      "vehicleType": "string"
+    },
+    "location": {
+      "lat": null,
+      "lng": null
+    }
+  },
+  "token": "string"  // JWT authentication token
+}
+```
+
+##### Error Responses
+
+###### Validation Error (400 Bad Request)
+```json
+{
+  "errors": [
+    {
+      "msg": "Error message",
+      "param": "field_name",
+      "location": "body"
+    }
+  ]
+}
+```
+
+###### Duplicate Email/Plate (409 Conflict)
+```json
+{
+  "message": "Email address or vehicle plate number already exists"
+}
+```
+
+#### Notes
+- The password is automatically hashed before storing in the database
+- Email addresses and vehicle plate numbers must be unique in the system
+- All captains start with 'inactive' status by default
+- Location coordinates (lat/lng) are initially null and updated when the captain is active
+- The JWT token is valid for 24 hours
+- All fields are required except lastname
+
