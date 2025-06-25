@@ -148,7 +148,7 @@ Authorization: Bearer <token>
 Get the authenticated user's profile information. This endpoint requires authentication.
 
 #### Request
-No request body needed. Requires authentication token in headers.
+No request body needed. Requires authentication token in headers and cookie.
 
 #### Response
 
