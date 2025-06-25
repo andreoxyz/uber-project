@@ -311,3 +311,173 @@ Register a new captain (driver) in the system.
 - The JWT token is valid for 24 hours
 - All fields are required except lastname
 
+### POST /api/captains/login
+
+Authenticate a captain and receive an access token.
+
+#### Request Body
+
+```json
+{
+  "email": "string",    // valid email address
+  "password": "string"  // minimum 6 characters
+}
+```
+
+#### Validation Rules
+- Email must be a valid email address
+- Password must be at least 6 characters long
+
+#### Response
+
+##### Success Response (200 OK)
+```json
+{
+  "message": "Captain logged in successfully",
+  "captain": {
+    "_id": "string",
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "vehicle": {
+      "color": "string",
+      "plate": "string",
+      "capacity": number,
+      "vehicleType": "string"
+    },
+    "token": "string"  // JWT authentication token
+  }
+}
+```
+
+##### Error Responses
+
+###### Invalid Credentials (400 Bad Request)
+```json
+{
+  "message": "Invalid email or password"
+}
+```
+
+#### Notes
+- The password is compared with the hashed password stored in the database
+- A JWT token is generated and returned upon successful login
+- The token is also set in cookies for additional security
+- For security reasons, the same error message is returned for both invalid email and invalid password
+
+### GET /api/captains/profile
+
+Get the authenticated captain's profile information. This endpoint requires authentication.
+
+#### Request
+No request body needed. Requires authentication token in headers or cookies.
+
+#### Response
+
+##### Success Response (200 OK)
+```json
+{
+  "message": "Captain profile fetched successfully",
+  "captain": {
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "status": "string",
+    "socketId": "string",
+    "vehicle": {
+      "color": "string",
+      "plate": "string",
+      "capacity": number,
+      "vehicleType": "string"
+    },
+    "location": {
+      "lat": number,
+      "lng": number
+    }
+  }
+}
+```
+
+##### Error Response (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access"
+}
+```
+
+### POST /api/captains/logout
+
+Logout the currently authenticated captain by blacklisting their token.
+
+#### Request
+No request body needed. Requires authentication token in headers or cookies.
+
+#### Response
+
+##### Success Response (200 OK)
+```json
+{
+  "message": "Captain logged out successfully"
+}
+```
+
+##### Error Response (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access"
+}
+```
+
+#### Notes
+- The token is added to a blacklist upon logout
+- The token cookie is cleared
+- Blacklisted tokens cannot be reused
+
+## Authentication Middleware
+
+The API uses two separate authentication middlewares for users and captains:
+
+### User Authentication (`authUser`)
+- Validates JWT tokens for user endpoints
+- Checks token in both cookies and Authorization header
+- Verifies token hasn't been blacklisted
+- Attaches user object to request (`req.user`)
+
+### Captain Authentication (`authCaptain`)
+- Validates JWT tokens for captain endpoints
+- Checks token in both cookies and Authorization header
+- Verifies token hasn't been blacklisted
+- Attaches captain object to request (`req.captain`)
+
+#### Token Format
+```
+Authorization: Bearer <token>
+```
+
+#### Common Error Responses
+
+##### Missing Token (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access"
+}
+```
+
+##### Blacklisted Token (401 Unauthorized)
+```json
+{
+  "message": "Unauthorized access."
+}
+```
+
+#### Security Features
+- Tokens expire after 24 hours
+- Blacklisted tokens are automatically removed after 24 hours
+- Supports both cookie-based and header-based token validation
+- Password field is excluded from database queries by default
+- Tokens are invalidated upon logout
+
